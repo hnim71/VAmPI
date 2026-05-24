@@ -43,14 +43,17 @@ class User(db.Model):
             return e
 
     @staticmethod
-    def decode_auth_token(auth_token):
-        try:
-            payload = jwt.decode(auth_token, vuln_app.app.config.get('SECRET_KEY'), algorithms=["HS256"])
-            return payload
-        except jwt.ExpiredSignatureError:
-            return {'error': 'Signature expired. Please log in again.'}
-        except jwt.InvalidTokenError:
-            return {'error': 'Invalid token. Please log in again.'}
+    def get_user(username):
+        if vuln:
+            user_query = text("SELECT * FROM users WHERE username = :u")
+            ret = db.session.execute(user_query, {"u": username}).fetchone()
+            if ret:
+                fin_query = '{"username": "%s", "email": "%s"}' % (ret[1], ret[3])
+            else:
+                fin_query = None
+        else:
+            fin_query = User.query.filter_by(username=username).first()
+        return fin_query
 
     def json(self):
         return {'username': self.username, 'email': self.email}
