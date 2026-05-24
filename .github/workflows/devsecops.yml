@@ -1,5 +1,4 @@
 name: DevSecOps Pipeline
-
 on: [push, pull_request]
 
 jobs:
@@ -8,22 +7,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      # SAST - Semgrep
+      # SAST 1: Semgrep
       - name: SAST Scan (Semgrep)
         run: |
           pip install semgrep
           semgrep scan --config "p/security-audit" --json -o sast-report.json
         continue-on-error: true
 
-      # SAST - SonarQube
+      # SAST 2: SonarQube
       - name: SAST Scan (SonarQube)
         uses: SonarSource/sonarcloud-github-action@master
         env:
@@ -33,7 +24,7 @@ jobs:
             -Dsonar.projectKey=hnim71_VAmPI2
             -Dsonar.organization=hnim71
 
-      # SCA - Snyk
+      # SCA: Snyk
       - name: SCA Scan (Snyk)
         uses: snyk/actions/python@master
         continue-on-error: true
@@ -42,10 +33,17 @@ jobs:
         with:
           args: --severity-threshold=high
 
+      # DAST: OWASP ZAP
+      - name: DAST Scan (OWASP ZAP)
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          target: 'http://localhost:5000'
+        continue-on-error: true
+
       # Quality Gate
       - name: Quality Gate
         run: |
           if [ -f sast-report.json ] && grep -q "ERROR" sast-report.json; then
-            echo "::error::Pipeline failed: Security Vulnerabilities found!"
+            echo "::error::Lỗi High/Critical phát hiện!"
             exit 1
           fi
