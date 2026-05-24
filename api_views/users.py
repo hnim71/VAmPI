@@ -118,7 +118,7 @@ def token_validator(auth_header):
     if auth_header:
         try:
             auth_token = auth_header.split(" ")[1]
-        except:
+        except (IndexError, AttributeError):
             auth_token = ""
     else:
         auth_token = ""
