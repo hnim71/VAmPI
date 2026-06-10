@@ -7,52 +7,60 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # SAST 1: Semgrep
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 1. SAST - Semgrep (Bỏ continue-on-error, có lỗi là dừng)
       - name: SAST Scan (Semgrep)
         run: |
           pip install semgrep
-          semgrep scan --config "p/security-audit" --json -o sast-report.json
-        continue-on-error: true
+          # Dùng --error để ép Semgrep fail pipeline nếu phát hiện lỗi High/Error
+          semgrep scan --config "p/security-audit" --error
 
-      # SAST 2: SonarQube
+      # 2. SAST - SonarQube (Quét và đẩy dữ liệu)
       - name: SAST Scan (SonarQube)
         uses: SonarSource/sonarcloud-github-action@master
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=hnim71_VAmPI
-            -Dsonar.organization=hnim71
-            -Dsonar.sources=.
+            -Dsonar.projectKey=KEY_CUA_BAN
+            -Dsonar.organization=ORG_CUA_BAN
 
-      # SCA: Snyk
+      # 3. SonarQube Quality Gate Check (BƯỚC ÉP DỪNG)
+      - name: SonarCloud Quality Gate Check
+        uses: sonarsource/sonarcloud-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # 4. SCA - Snyk (Bỏ continue-on-error)
       - name: SCA Scan (Snyk)
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: |
-          # 1. Bắt buộc cài lại thư viện ngay trong step này để Snyk nhận diện
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          
-          # 2. Cài đặt và cấu hình Snyk
           npm install -g snyk
           snyk auth $SNYK_TOKEN
-          
-          # 3. Chạy test với các cờ (flags) ép buộc bỏ qua lỗi môi trường
           snyk test --file=requirements.txt --command=python3 --skip-unresolved --severity-threshold=high
-        continue-on-error: true
-        
-      # DAST: OWASP ZAP
+
+      # 5. Khởi động ứng dụng (BƯỚC BẮT BUỘC ĐỂ DAST CHẠY ĐƯỢC)
+      - name: Start App for DAST
+        run: |
+          nohup python app.py > app.log 2>&1 &
+          sleep 10
+          # Kiểm tra xem app đã sống chưa, nếu chưa sống -> dừng pipeline
+          curl --silent --fail http://localhost:5000/ || exit 1
+
+      # 6. DAST - OWASP ZAP (Bỏ continue-on-error)
       - name: DAST Scan (OWASP ZAP)
         uses: zaproxy/action-baseline@v0.7.0
         with:
           target: 'http://localhost:5000'
-        continue-on-error: true
-
-      # Quality Gate
-      - name: Quality Gate
-        run: |
-          if [ -f sast-report.json ] && grep -q "ERROR" sast-report.json; then
-            echo "::error::Lỗi High/Critical phát hiện!"
-            exit 1
-          fi
