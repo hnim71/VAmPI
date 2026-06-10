@@ -31,14 +31,15 @@ def add_new_book():
     
     if book:
         return Response(error_message_helper("Book Already exists!"), 400, mimetype=JSON_MIME)
-    
-    newBook = Book(book_title=request_data.get('book_title'), secret_content=request_data.get('secret'),
+        
+    new_book = Book(book_title=request_data.get('book_title'), secret_content=request_data.get('secret'),
                    user_id=user.id)
+    db.session.add(new_book)
     db.session.add(newBook)
     db.session.commit()
     
-    responseObject = {'status': 'success', 'message': 'Book has been added.'}
-    return Response(json.dumps(responseObject), 200, mimetype=JSON_MIME)
+    response_object = {'status': 'success', 'message': 'Book has been added.'}
+    return Response(json.dumps(response_object), 200, mimetype=JSON_MIME)
 
 def get_by_title(book_title):
     resp = token_validator(request.headers.get('Authorization'))
@@ -48,23 +49,23 @@ def get_by_title(book_title):
         if vuln:  # Broken Object Level Authorization
             book = Book.query.filter_by(book_title=str(book_title)).first()
             if book:
-                responseObject = {
+                response_object = {
                     'book_title': book.book_title,
                     'secret': book.secret_content,
                     'owner': book.user.username
                 }
-                return Response(json.dumps(responseObject), 200, mimetype=JSON_MIME)
+                return Response(json.dumps(response_object), 200, mimetype=JSON_MIME)
             else:
                 return Response(error_message_helper("Book not found!"), 404, mimetype=JSON_MIME)
         else:
             user = User.query.filter_by(username=resp['sub']).first()
             book = Book.query.filter_by(user=user, book_title=str(book_title)).first()
             if book:
-                responseObject = {
+                response_object = {
                     'book_title': book.book_title,
                     'secret': book.secret_content,
                     'owner': book.user.username
                 }
-                return Response(json.dumps(responseObject), 200, mimetype=JSON_MIME)
+                return Response(json.dumps(response_object), 200, mimetype=JSON_MIME)
             else:
                 return Response(error_message_helper("Book not found!"), 404, mimetype=JSON_MIME)
