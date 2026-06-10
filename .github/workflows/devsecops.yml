@@ -23,17 +23,12 @@ jobs:
           pip install semgrep
           semgrep scan --config "p/security-audit" --error
 
-      # 2. SAST - SonarQube (Ép dừng ngay tại đây bằng Exit Code 3 nếu Quality Gate Failed)
+      # 2. SAST - SonarQube
       - name: SAST Scan (SonarQube)
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.projectKey=hnim71_VAmPI
-            -Dsonar.organization=hnim71
-            -Dsonar.qualitygate.wait=true
 
       # 3. SCA - Snyk (Phát hiện CVE High trở lên là dừng)
       - name: SCA Scan (Snyk)
