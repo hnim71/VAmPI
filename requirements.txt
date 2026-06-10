@@ -6,4 +6,3 @@ sqlalchemy==2.0.2
 swagger-ui-bundle
 pyjwt==2.13.0
 markupsafe==2.1.2
-Werkzeug==3.0.3
