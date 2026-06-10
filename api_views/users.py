@@ -7,7 +7,7 @@ from config import db, vuln_app
 from api_views.json_schemas import register_user_schema, login_user_schema, update_email_schema
 from flask import jsonify, Response, request, json
 from models.user_model import User
-from app import vuln
+from config import vuln
 
 #Define a constant instead of duplicating this literal "application/json" 27 times.
 JSON_MIME = "application/json"
