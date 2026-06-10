@@ -4,8 +4,10 @@ from flask import jsonify
 from flask_sqlalchemy import SQLAlchemy
 from connexion.exceptions import ProblemException
 
-vuln = True  
-alive = True
+vuln = int(os.getenv('vulnerable', 1))
+# vuln=1
+# token alive for how many seconds?
+alive = int(os.getenv('tokentimetolive', 60))
 vuln_app = connexion.App(__name__, specification_dir='./openapi_specs')
 
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(vuln_app.app.root_path, 'database/database.db')
