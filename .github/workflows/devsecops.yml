@@ -23,7 +23,7 @@ jobs:
           args: >
             -Dsonar.projectKey=hnim71_VAmPI2
             -Dsonar.organization=hnim71
-            -Dsonar.qualitygate.wait = true
+            -Dsonar.qualitygate.wait=true
 
       # SCA: Snyk
       - name: SCA Scan (Snyk)
