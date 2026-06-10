@@ -99,3 +99,6 @@ class User(db.Model):
         User.register_user("name1", "pass1", "mail1@mail.com", False)
         User.register_user("name2", "pass2", "mail2@mail.com", False)
         User.register_user("admin", "pass1", "admin@mail.com", True)
+        
+def decode_auth_token_wrapper(token):
+    return User.decode_auth_token(token)
