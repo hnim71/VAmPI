@@ -11,7 +11,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      x-bearerInfoFunc: models.user_model.User.decode_auth_token
+      x-bearerInfoFunc: models.user_model.decode_auth_token_wrapper
 paths:
   /createdb:
     get:
