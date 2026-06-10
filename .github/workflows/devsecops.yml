@@ -27,12 +27,12 @@ jobs:
 
       # SCA: Snyk
       - name: SCA Scan (Snyk)
-        run: |
-          npm install -g snyk
-          snyk auth ${{ secrets.SNYK_TOKEN }}
-          snyk test --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          npm install -g snyk
+          snyk auth $SNYK_TOKEN
+          snyk test --file=requirements.txt --severity-threshold=high
       # DAST: OWASP ZAP
       - name: DAST Scan (OWASP ZAP)
         uses: zaproxy/action-baseline@v0.7.0
