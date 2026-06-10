@@ -31,8 +31,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=KEY_CUA_BAN
-            -Dsonar.organization=ORG_CUA_BAN
+            -Dsonar.projectKey=hnim71_VAmPI
+            -Dsonar.organization=hnim71
             -Dsonar.qualitygate.wait=true
 
       # 3. SCA - Snyk (Phát hiện CVE High trở lên là dừng)
