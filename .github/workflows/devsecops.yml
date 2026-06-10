@@ -17,14 +17,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 1. SAST - Semgrep (Bỏ continue-on-error, có lỗi là dừng)
+      # 1. SAST - Semgrep (Phát hiện lỗi là dừng)
       - name: SAST Scan (Semgrep)
         run: |
           pip install semgrep
-          # Dùng --error để ép Semgrep fail pipeline nếu phát hiện lỗi High/Error
           semgrep scan --config "p/security-audit" --error
 
-      # 2. SAST - SonarQube (Quét và đẩy dữ liệu)
+      # 2. SAST - SonarQube (Ép dừng ngay tại đây bằng Exit Code 3 nếu Quality Gate Failed)
       - name: SAST Scan (SonarQube)
         uses: SonarSource/sonarcloud-github-action@master
         env:
@@ -34,15 +33,9 @@ jobs:
           args: >
             -Dsonar.projectKey=KEY_CUA_BAN
             -Dsonar.organization=ORG_CUA_BAN
+            -Dsonar.qualitygate.wait=true
 
-      # 3. SonarQube Quality Gate Check (BƯỚC ÉP DỪNG)
-      - name: SonarCloud Quality Gate Check
-        uses: sonarsource/sonarcloud-quality-gate-action@master
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      # 4. SCA - Snyk (Bỏ continue-on-error)
+      # 3. SCA - Snyk (Phát hiện CVE High trở lên là dừng)
       - name: SCA Scan (Snyk)
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -51,15 +44,14 @@ jobs:
           snyk auth $SNYK_TOKEN
           snyk test --file=requirements.txt --command=python3 --skip-unresolved --severity-threshold=high
 
-      # 5. Khởi động ứng dụng (BƯỚC BẮT BUỘC ĐỂ DAST CHẠY ĐƯỢC)
+      # 4. Khởi động ứng dụng (Mồi cho DAST)
       - name: Start App for DAST
         run: |
           nohup python app.py > app.log 2>&1 &
           sleep 10
-          # Kiểm tra xem app đã sống chưa, nếu chưa sống -> dừng pipeline
           curl --silent --fail http://localhost:5000/ || exit 1
 
-      # 6. DAST - OWASP ZAP (Bỏ continue-on-error)
+      # 5. DAST - OWASP ZAP (Quét thực tế, có lỗi là dừng)
       - name: DAST Scan (OWASP ZAP)
         uses: zaproxy/action-baseline@v0.7.0
         with:
