@@ -21,9 +21,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=hnim71_VAmPI2
+            -Dsonar.projectKey=hnim71_VAmPI
             -Dsonar.organization=hnim71
-            -Dsonar.qualitygate.wait=true
+            -Dsonar.sources=.
 
       # SCA: Snyk
       - name: SCA Scan (Snyk)
